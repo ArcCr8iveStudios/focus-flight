@@ -6,9 +6,14 @@ struct MissionSetupView: View {
 
     @State private var missionName = ""
     @State private var duration = 25
+    @State private var startTime = Date()
     @State private var showMissionBrief = false
 
     @Environment(\.dismiss) private var dismiss
+
+    private var endTime: Date {
+        startTime.addingTimeInterval(Double(duration) * 60)
+    }
 
     var body: some View {
         ZStack {
@@ -41,7 +46,18 @@ struct MissionSetupView: View {
     }
 
     private var missionInputView: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 30) {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color.white.opacity(0.55))
+                .overlay {
+                    VStack(spacing: 18) {
+                        timeRow(label: "Start\nTime", date: startTime)
+                        timeRow(label: "End\nTime", date: endTime)
+                    }
+                    .padding()
+                }
+                .frame(height: 220)
+
             VStack(spacing: 14) {
                 Text("Mission Name")
                     .font(.system(size: 44, weight: .medium, design: .rounded))
@@ -56,28 +72,16 @@ struct MissionSetupView: View {
                     .frame(maxWidth: 240)
             }
 
-            VStack(spacing: 10) {
-                Text("Mission Duration")
-                    .font(.system(size: 36, weight: .medium, design: .rounded))
-
-                Picker("Mission Duration", selection: $duration) {
-                    ForEach(Array(stride(from: 5, through: 180, by: 5)), id: \.self) { minute in
-                        Text("\(minute) min")
-                            .font(.system(size: 28, design: .rounded))
-                            .tag(minute)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 170)
-                .clipped()
-            }
+            Stepper("Duration: \(duration) min", value: $duration, in: 5...180, step: 5)
+                .font(.system(size: 26, design: .rounded))
+                .padding(.horizontal)
 
             Spacer()
 
             Button {
                 guard !missionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
-                let newMission = Mission(name: missionName, duration: duration, date: Date())
+                let newMission = Mission(name: missionName, duration: duration, date: startTime)
                 missions.append(newMission)
                 activeMission = newMission
                 showMissionBrief = true
@@ -147,4 +151,33 @@ struct MissionSetupView: View {
             .foregroundColor(.black.opacity(0.85))
         }
     }
+
+    private func timeRow(label: String, date: Date) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 40, weight: .medium, design: .rounded))
+                .multilineTextAlignment(.leading)
+
+            Spacer()
+
+            Text(date.formatted(date: .abbreviated, time: .omitted))
+                .font(.system(size: 30, design: .rounded))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.gray.opacity(0.22))
+                .clipShape(Capsule())
+
+            Text(date.formatted(date: .omitted, time: .shortened))
+                .font(.system(size: 30, design: .rounded))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.gray.opacity(0.22))
+                .clipShape(Capsule())
+        }
+    }
+    // Compatibility shim in case older references use `timerow` casing.
+    private func timerow(label: String, date: Date) -> some View {
+        timeRow(label: label, date: date)
+    }
+
 }
