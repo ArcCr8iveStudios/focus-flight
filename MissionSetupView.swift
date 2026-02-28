@@ -17,10 +17,22 @@ struct MissionSetupView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
             
-            Stepper("Duration: \(duration) min", value: $duration, in: 5...180, step: 5)
-                .padding()
+            Text("Select Duration")
+                .font(.headline)
             
-            Button("Start") {
+            Picker("Duration", selection: $duration) {
+                ForEach(5...180, id: \.self) { minute in
+                    if minute % 5 == 0 {
+                        Text("\(minute) min").tag(minute)
+                    }
+                }
+            }
+            .pickerStyle(.wheel)
+            .frame(height: 150)
+            
+            Button("Start Mission") {
+                guard !missionName.isEmpty else { return }
+                
                 let newMission = Mission(
                     name: missionName,
                     duration: duration,
@@ -36,8 +48,9 @@ struct MissionSetupView: View {
             .background(Color.green)
             .foregroundColor(.black)
             .cornerRadius(12)
+            
+            Spacer()
         }
         .navigationTitle("New Mission")
     }
 }
-
