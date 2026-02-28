@@ -27,7 +27,7 @@ struct HomeView: View {
                         .font(.title3)
                         .foregroundColor(.black.opacity(0.75))
 
-                    Text("Focus Flight")
+                          Text("Focus Flight")
                         .font(.system(size: 52, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.6)
                         .foregroundColor(.white)
@@ -64,13 +64,6 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
-                Image(systemName: "airplane")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 120)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .frame(maxWidth: .infinity)
 
                 HStack(alignment: .bottom, spacing: 40) {
                     VStack(spacing: 10) {
