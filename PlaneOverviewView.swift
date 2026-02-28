@@ -1,11 +1,20 @@
 import SwiftUI
 
 struct PlaneOverviewView: View {
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         ZStack {
             Color.gray.opacity(0.65).ignoresSafeArea()
 
             VStack(spacing: 20) {
+                HStack {
+                    Button("←") { dismiss() }
+                        .font(.system(size: 42, weight: .medium, design: .rounded))
+                        .foregroundColor(.black.opacity(0.85))
+                    Spacer()
+                }
+
                 Text("Aircraft Upgrade")
                     .font(.system(size: 54, weight: .medium, design: .rounded))
                     .foregroundColor(.red.opacity(0.65))

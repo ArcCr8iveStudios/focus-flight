@@ -3,11 +3,20 @@ import SwiftUI
 struct FlightLogView: View {
     var missions: [Mission]
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         ZStack {
             Color.gray.opacity(0.65).ignoresSafeArea()
 
             VStack(spacing: 24) {
+                HStack {
+                    Button("←") { dismiss() }
+                        .font(.system(size: 42, weight: .medium, design: .rounded))
+                        .foregroundColor(.black.opacity(0.85))
+                    Spacer()
+                }
+
                 Text("Focus Log")
                     .font(.system(size: 58, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
@@ -26,6 +35,8 @@ struct FlightLogView: View {
                                 VStack(spacing: 0) {
                                     ForEach(missions) { mission in
                                         HStack(spacing: 0) {
+                                            tableCell(mission.name, color: .blue)
+                                            tableCell("\(mission.duration)m", color: .black.opacity(0.8))
                                             tableCell(mission.name)
                                             tableCell("\(mission.duration)m")
                                         }
@@ -60,11 +71,16 @@ struct FlightLogView: View {
     private func tableHeader(title: String) -> some View {
         Text(title)
             .font(.system(size: 38, weight: .medium, design: .rounded))
+            .foregroundColor(.orange)
             .foregroundColor(.red.opacity(0.75))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
     }
 
+    private func tableCell(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.system(size: 30, design: .rounded))
+            .foregroundColor(color)
     private func tableCell(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 30, design: .rounded))

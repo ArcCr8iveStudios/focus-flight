@@ -52,6 +52,18 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: 230)
 
+                NavigationLink {
+                    PlaneOverviewView()
+                } label: {
+                    Image(systemName: "airplane")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 120)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
                 Image(systemName: "airplane")
                     .resizable()
                     .scaledToFit()
@@ -96,6 +108,21 @@ struct HomeView: View {
                     }
                 }
 
+                if activeMission != nil {
+                    Button {
+                        endMission()
+                    } label: {
+                        Text("End Mission")
+                            .font(.system(size: 36, weight: .medium, design: .rounded))
+                            .padding(.vertical, 14)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.black.opacity(0.75))
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 Spacer(minLength: 0)
             }
             .padding(24)
@@ -126,5 +153,14 @@ struct HomeView: View {
             RoundedRectangle(cornerRadius: 30).fill(Color.white.opacity(0.92)).frame(width: 185, height: 66).offset(y: 20)
         }
         .frame(width: 210, height: 100)
+    }
+
+    private func endMission() {
+        guard let active = activeMission,
+              let index = missions.firstIndex(where: { $0.id == active.id }) else { return }
+
+        missions[index].isActive = false
+        missions[index].isCompleted = true
+        activeMission = nil
     }
 }
