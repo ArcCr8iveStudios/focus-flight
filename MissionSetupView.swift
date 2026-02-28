@@ -4,21 +4,25 @@ struct MissionSetupView: View {
     @Binding var missions: [Mission]
     @Binding var activeMission: Mission?
 
-    @State private var missionName = ""
-    @State private var duration = 25
-    @State private var showMissionBrief = false
+    @State private var missionName: String = ""
+    @State private var duration: Int = 25
+    @State private var showMissionBrief: Bool = false
 
-    @Environment(\.presentationMode) private var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
-            Color.gray.opacity(0.65).ignoresSafeArea()
+            Color.gray.opacity(0.65)
+                .ignoresSafeArea()
 
             VStack(spacing: 24) {
                 HStack {
-                    Button("←") { presentationMode.wrappedValue.dismiss() }
-                        .font(.system(size: 44, weight: .medium, design: .rounded))
-                        .foregroundColor(.black.opacity(0.8))
+                    Button("←") {
+                        dismiss()
+                    }
+                    .font(.system(size: 44, weight: .medium, design: .rounded))
+                    .foregroundColor(.black.opacity(0.8))
+
                     Spacer()
                 }
 
@@ -44,11 +48,7 @@ struct MissionSetupView: View {
         VStack(spacing: 28) {
             VStack(spacing: 14) {
                 Text("Mission Name")
-                    .font(.system(size: 44, weight: .medium, design: .rounded))
-
-                TextField("Value", text: $missionName)
-                    .font(.system(size: 28, weight: .regular, design: .rounded))
-                    .textFieldStyle(.plain)
+@@ -52,99 +56,97 @@ struct MissionSetupView: View {
                     .padding(.vertical, 14)
                     .padding(.horizontal, 20)
                     .background(Color.white.opacity(0.9))
@@ -74,23 +74,21 @@ struct MissionSetupView: View {
 
             Spacer()
 
-            Button {
-                guard !missionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            Button("Start Mission") {
+                let trimmed = missionName.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
 
-                let newMission = Mission(name: missionName, duration: duration, date: Date())
+                let newMission = Mission(name: trimmed, duration: duration, date: Date())
                 missions.append(newMission)
                 activeMission = newMission
                 showMissionBrief = true
-            } label: {
-                Text("Start Mission")
-                    .font(.system(size: 44, weight: .medium, design: .rounded))
-                    .padding(.vertical, 18)
-                    .padding(.horizontal, 44)
-                    .background(Color.red.opacity(0.72))
-                    .foregroundColor(.black.opacity(0.85))
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .font(.system(size: 44, weight: .medium, design: .rounded))
+            .padding(.vertical, 18)
+            .padding(.horizontal, 44)
+            .background(Color.red.opacity(0.72))
+            .foregroundColor(.black.opacity(0.85))
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
     }
 
@@ -103,7 +101,25 @@ struct MissionSetupView: View {
                 .font(.system(size: 44, weight: .medium, design: .rounded))
 
             Text("\(duration) min")
-@@ -129,55 +125,26 @@ struct MissionSetupView: View {
+                .font(.system(size: 30, weight: .medium, design: .rounded))
+                .padding(.horizontal, 24)
+                .padding(.vertical, 10)
+                .background(Color.blue.opacity(0.35))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            Text("Aircraft Upgrade")
+                .font(.system(size: 54, weight: .medium, design: .rounded))
+                .foregroundColor(.red.opacity(0.65))
+
+            HStack(spacing: 40) {
+                Image(systemName: "airplane")
+                Text("→")
+                Image(systemName: "airplane")
+            }
+            .font(.system(size: 62))
+
+            ProgressView(value: 0.55)
+                .tint(.blue)
                 .scaleEffect(x: 1, y: 2, anchor: .center)
                 .padding(.horizontal)
 
@@ -118,7 +134,7 @@ struct MissionSetupView: View {
                 Spacer()
 
                 Button("Start Mission") {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
                 .font(.system(size: 44, weight: .medium, design: .rounded))
                 .padding(.vertical, 18)
@@ -129,3 +145,4 @@ struct MissionSetupView: View {
             .foregroundColor(.black.opacity(0.85))
         }
     }
+}
