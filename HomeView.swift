@@ -27,7 +27,7 @@ struct HomeView: View {
                         .font(.title3)
                         .foregroundColor(.black.opacity(0.75))
 
-                          Text("Focus Flight")
+                    Text("Focus Flight")
                         .font(.system(size: 52, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.6)
                         .foregroundColor(.white)

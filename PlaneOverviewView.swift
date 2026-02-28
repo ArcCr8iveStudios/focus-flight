@@ -40,7 +40,23 @@ struct PlaneOverviewView: View {
                         .foregroundColor(.black.opacity(0.85))
                     }
                     .frame(height: 430)
+
+                HStack(spacing: 34) {
+                    Image(systemName: "airplane")
+                    Text("→")
+                    Image(systemName: "airplane")
+                }
+                .font(.system(size: 62))
+
+                ProgressView(value: 0.58)
+                    .tint(.blue)
+                    .scaleEffect(x: 1, y: 2, anchor: .center)
+                    .padding(.horizontal, 12)
+
+                Spacer()
             }
+            .padding(24)
         }
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
