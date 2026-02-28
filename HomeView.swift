@@ -5,14 +5,16 @@ struct HomeView: View {
     @Binding var missions: [Mission]
     @Binding var activeMission: Mission?
     
-    @State private var moveClouds = false
+    var completedMissions: Int {
+        missions.filter { $0.isCompleted }.count
+    }
     
     var turbulenceLevel: Double {
         activeMission == nil ? 80 : 30
     }
     
     var altitudeLevel: Double {
-        activeMission == nil ? 20 : 70
+        min(Double(completedMissions) * 10, 100)
     }
     
     var body: some View {
@@ -46,8 +48,8 @@ struct HomeView: View {
                         Text("Start Mission")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(.ultraThinMaterial)
-                            .foregroundColor(.black)
+                            .background(Color.red)
+                            .foregroundColor(.white)
                             .cornerRadius(16)
                     }
                     
@@ -57,18 +59,18 @@ struct HomeView: View {
                         Text("Task Tracker")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(.ultraThinMaterial)
-                            .foregroundColor(.black)
+                            .background(Color.orange)
+                            .foregroundColor(.white)
                             .cornerRadius(16)
                     }
                     
                     if activeMission != nil {
                         Button("End Mission") {
-                            activeMission = nil
+                            endMission()
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.red)
+                        .background(Color.black)
                         .foregroundColor(.white)
                         .cornerRadius(16)
                     }
@@ -77,17 +79,16 @@ struct HomeView: View {
                 
                 Spacer()
                 
-                // FLIGHT LOG ABOVE GAUGES
                 HStack(spacing: 40) {
                     NavigationLink("Flight Log") {
                         FlightLogView(missions: missions)
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(.cyan)
                     
                     NavigationLink("Plane Overview") {
                         PlaneOverviewView()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(.green)
                 }
                 
                 Spacer()
@@ -123,8 +124,10 @@ struct HomeView: View {
                             
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.green)
-                                .frame(width: 40,
-                                       height: CGFloat(altitudeLevel / 100) * 150)
+                                .frame(
+                                    width: 40,
+                                    height: CGFloat(altitudeLevel / 100) * 150
+                                )
                         }
                     }
                 }
@@ -133,5 +136,16 @@ struct HomeView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+    }
+    
+    private func endMission() {
+        guard let active = activeMission else { return }
+        
+        if let index = missions.firstIndex(where: { $0.id == active.id }) {
+            missions[index].isActive = false
+            missions[index].isCompleted = true
+        }
+        
+        activeMission = nil
     }
 }
