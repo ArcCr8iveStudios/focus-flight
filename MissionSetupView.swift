@@ -8,7 +8,7 @@ struct MissionSetupView: View {
     @State private var duration = 25
     @State private var showMissionBrief = false
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     var body: some View {
         ZStack {
@@ -16,7 +16,7 @@ struct MissionSetupView: View {
 
             VStack(spacing: 24) {
                 HStack {
-                    Button("←") { dismiss() }
+                    Button("←") { presentationMode.wrappedValue.dismiss() }
                         .font(.system(size: 44, weight: .medium, design: .rounded))
                         .foregroundColor(.black.opacity(0.8))
                     Spacer()
@@ -118,7 +118,7 @@ struct MissionSetupView: View {
                 Spacer()
 
                 Button("Start Mission") {
-                    dismiss()
+                    presentationMode.wrappedValue.dismiss()
                 }
                 .font(.system(size: 44, weight: .medium, design: .rounded))
                 .padding(.vertical, 18)
