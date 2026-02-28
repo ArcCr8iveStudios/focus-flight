@@ -5,10 +5,20 @@ struct MissionSetupView: View {
     @Binding var activeMission: Mission?
 
     @State private var missionName: String = ""
-    @State private var duration: Int = 25
+    @State private var hours: Int = 0
+    @State private var minutes: Int = 25
     @State private var showMissionBrief: Bool = false
 
+    @FocusState private var isMissionNameFocused: Bool
     @Environment(\.dismiss) private var dismiss
+
+    private var totalDurationMinutes: Int {
+        max((hours * 60) + minutes, 1)
+    }
+
+    private var durationDisplayText: String {
+        "\(hours)h \(minutes)m"
+    }
 
     var body: some View {
         ZStack {
@@ -42,33 +52,51 @@ struct MissionSetupView: View {
             .padding(24)
         }
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            isMissionNameFocused = true
+        }
     }
 
     private var missionInputView: some View {
         VStack(spacing: 28) {
             VStack(spacing: 14) {
                 Text("Mission Name")
-@@ -52,99 +56,97 @@ struct MissionSetupView: View {
+                    .font(.system(size: 44, weight: .medium, design: .rounded))
+
+                TextField("Type mission name", text: $missionName)
+                    .font(.system(size: 30, weight: .regular, design: .rounded))
+                    .textFieldStyle(.plain)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled(true)
+                    .submitLabel(.done)
+                    .focused($isMissionNameFocused)
                     .padding(.vertical, 14)
                     .padding(.horizontal, 20)
                     .background(Color.white.opacity(0.9))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .frame(maxWidth: 240)
+                    .frame(maxWidth: .infinity)
             }
 
             VStack(spacing: 10) {
                 Text("Mission Duration")
                     .font(.system(size: 36, weight: .medium, design: .rounded))
 
-                Picker("Mission Duration", selection: $duration) {
-                    ForEach(Array(stride(from: 5, through: 180, by: 5)), id: \.self) { minute in
-                        Text("\(minute) min")
-                            .font(.system(size: 28, design: .rounded))
-                            .tag(minute)
+                HStack(spacing: 0) {
+                    Picker("Hours", selection: $hours) {
+                        ForEach(0...12, id: \.self) { hour in
+                            Text("\(hour) h").tag(hour)
+                        }
                     }
+                    .pickerStyle(.wheel)
+
+                    Picker("Minutes", selection: $minutes) {
+                        ForEach(0...59, id: \.self) { minute in
+                            Text("\(minute) m").tag(minute)
+                        }
+                    }
+                    .pickerStyle(.wheel)
                 }
-                .pickerStyle(.wheel)
-                .frame(height: 170)
+                .frame(height: 180)
                 .clipped()
             }
 
@@ -76,9 +104,12 @@ struct MissionSetupView: View {
 
             Button("Start Mission") {
                 let trimmed = missionName.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
+                guard !trimmed.isEmpty else {
+                    isMissionNameFocused = true
+                    return
+                }
 
-                let newMission = Mission(name: trimmed, duration: duration, date: Date())
+                let newMission = Mission(name: trimmed, duration: totalDurationMinutes, date: Date())
                 missions.append(newMission)
                 activeMission = newMission
                 showMissionBrief = true
@@ -100,7 +131,7 @@ struct MissionSetupView: View {
             Text("Session Time")
                 .font(.system(size: 44, weight: .medium, design: .rounded))
 
-            Text("\(duration) min")
+            Text(durationDisplayText)
                 .font(.system(size: 30, weight: .medium, design: .rounded))
                 .padding(.horizontal, 24)
                 .padding(.vertical, 10)

@@ -1,4 +1,5 @@
 import SwiftUI
+import AudioToolbox
 
 struct HomeView: View {
     @Binding var missions: [Mission]
@@ -123,7 +124,7 @@ struct HomeView: View {
         .navigationBarBackButtonHidden(true)
     }
 
-    private func navButton<Destination: View>(_ title: String, color: Color, @ViewBuilder destination: @escaping () -> Destination) -> some View {
+    private func navButton<Destination: View>(_ title: String, color: Color, destination: @escaping () -> Destination) -> some View {
         NavigationLink(destination: destination()) {
             Text(title)
                 .font(.system(size: 42, weight: .medium, design: .rounded))
@@ -155,5 +156,36 @@ struct HomeView: View {
         missions[index].isActive = false
         missions[index].isCompleted = true
         activeMission = nil
+
+        MissionAlarmPlayer.shared.playCompletionAlarm(duration: 3)
+    }
+}
+
+private final class MissionAlarmPlayer {
+    static let shared = MissionAlarmPlayer()
+
+    private var timer: Timer?
+    private var endDate: Date?
+
+    private init() {}
+
+    func playCompletionAlarm(duration: TimeInterval) {
+        timer?.invalidate()
+
+        endDate = Date().addingTimeInterval(duration)
+        AudioServicesPlaySystemSound(1005)
+
+        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] timer in
+            guard let self,
+                  let endDate = self.endDate,
+                  Date() < endDate else {
+                timer.invalidate()
+                self?.timer = nil
+                self?.endDate = nil
+                return
+            }
+
+            AudioServicesPlaySystemSound(1005)
+        }
     }
 }
