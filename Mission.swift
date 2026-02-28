@@ -6,4 +6,5 @@ struct Mission: Identifiable {
     var duration: Int
     var date: Date
     var isActive: Bool = true
+    var isCompleted: Bool = false
 }
