@@ -1,151 +1,130 @@
 import SwiftUI
 
 struct HomeView: View {
-    
     @Binding var missions: [Mission]
     @Binding var activeMission: Mission?
-    
+
     var completedMissions: Int {
         missions.filter { $0.isCompleted }.count
     }
-    
+
     var turbulenceLevel: Double {
-        activeMission == nil ? 80 : 30
+        activeMission == nil ? 75 : 35
     }
-    
+
     var altitudeLevel: Double {
-        min(Double(completedMissions) * 10, 100)
+        min(Double(completedMissions) * 14, 100)
     }
-    
+
     var body: some View {
         ZStack {
-            
-            LinearGradient(
-                colors: [Color.blue.opacity(0.9), Color.blue.opacity(0.6)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            
-            VStack {
-                
-                Spacer()
-                
-                Text("Focus Flight")
-                    .font(.system(size: 36, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                VStack(spacing: 20) {
-                    
-                    NavigationLink {
-                        MissionSetupView(
-                            missions: $missions,
-                            activeMission: $activeMission
-                        )
-                    } label: {
-                        Text("Start Mission")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                    }
-                    
-                    NavigationLink {
-                        TaskTrackerView()
-                    } label: {
-                        Text("Task Tracker")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.orange)
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                    }
-                    
-                    if activeMission != nil {
-                        Button("End Mission") {
-                            endMission()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.black)
+            Color(red: 0.58, green: 0.73, blue: 0.94)
+                .ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(spacing: 14) {
+                    Image(systemName: "line.3.horizontal")
+                        .font(.title3)
+                        .foregroundColor(.black.opacity(0.75))
+
+                    Text("Focus Flight")
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.6)
                         .foregroundColor(.white)
-                        .cornerRadius(16)
+                }
+                .padding(.top, 8)
+
+                cloud
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+
+                HStack(spacing: 18) {
+                    navButton("Start Mission", color: .red.opacity(0.75)) {
+                        MissionSetupView(missions: $missions, activeMission: $activeMission)
+                    }
+
+                    navButton("Task Tracker", color: .orange.opacity(0.8)) {
+                        TaskTrackerView()
                     }
                 }
-                .padding(.horizontal)
-                
-                Spacer()
-                
-                HStack(spacing: 40) {
-                    NavigationLink("Flight Log") {
-                        FlightLogView(missions: missions)
-                    }
-                    .foregroundColor(.cyan)
-                    
-                    NavigationLink("Plane Overview") {
-                        PlaneOverviewView()
-                    }
-                    .foregroundColor(.green)
+
+                navButton("Flight Log", color: .green.opacity(0.75)) {
+                    FlightLogView(missions: missions)
                 }
-                
-                Spacer()
-                
-                HStack(spacing: 60) {
-                    
-                    VStack {
+                .frame(maxWidth: 230)
+
+                Image(systemName: "airplane")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 120)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    .frame(maxWidth: .infinity)
+
+                HStack(alignment: .bottom, spacing: 40) {
+                    VStack(spacing: 10) {
                         Text("Turbulence")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
-                        
+
                         ZStack {
                             Circle()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 14)
-                                .frame(width: 140)
-                            
+                                .trim(from: 0.15, to: 0.95)
+                                .stroke(Color.white, lineWidth: 14)
+                                .frame(width: 138, height: 138)
+
                             Circle()
-                                .trim(from: 0, to: turbulenceLevel / 100)
-                                .stroke(Color.red,
-                                        style: StrokeStyle(lineWidth: 14, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                                .frame(width: 140)
+                                .trim(from: 0.65, to: 0.78)
+                                .stroke(Color.red.opacity(0.8), style: .init(lineWidth: 14, lineCap: .round))
+                                .frame(width: 138, height: 138)
                         }
                     }
-                    
-                    VStack {
+
+                    VStack(spacing: 10) {
                         Text("Altitude")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
-                        
+
                         ZStack(alignment: .bottom) {
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.4), lineWidth: 4)
-                                .frame(width: 40, height: 150)
-                            
-                            RoundedRectangle(cornerRadius: 16)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.green.opacity(0.7), lineWidth: 4)
+                                .frame(width: 38, height: 190)
+
+                            RoundedRectangle(cornerRadius: 12)
                                 .fill(Color.green)
-                                .frame(
-                                    width: 40,
-                                    height: CGFloat(altitudeLevel / 100) * 150
-                                )
+                                .frame(width: 30, height: CGFloat(altitudeLevel / 100) * 186)
                         }
                     }
                 }
-                
-                Spacer()
+
+                Spacer(minLength: 0)
             }
+            .padding(24)
         }
         .navigationBarBackButtonHidden(true)
     }
-    
-    private func endMission() {
-        guard let active = activeMission else { return }
-        
-        if let index = missions.firstIndex(where: { $0.id == active.id }) {
-            missions[index].isActive = false
-            missions[index].isCompleted = true
+
+    private func navButton<Destination: View>(_ title: String, color: Color, @ViewBuilder destination: @escaping () -> Destination) -> some View {
+        NavigationLink(destination: destination()) {
+            Text(title)
+                .font(.system(size: 42, weight: .medium, design: .rounded))
+                .minimumScaleFactor(0.5)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 24)
+                .frame(maxWidth: .infinity)
+                .background(color)
+                .foregroundColor(.black.opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
-        
-        activeMission = nil
+        .buttonStyle(.plain)
+    }
+
+    private var cloud: some View {
+        ZStack {
+            Circle().fill(Color.white.opacity(0.92)).frame(width: 78)
+            Circle().fill(Color.white.opacity(0.92)).frame(width: 88).offset(x: 42, y: 5)
+            Circle().fill(Color.white.opacity(0.92)).frame(width: 70).offset(x: -40, y: 10)
+            RoundedRectangle(cornerRadius: 30).fill(Color.white.opacity(0.92)).frame(width: 185, height: 66).offset(y: 20)
+        }
+        .frame(width: 210, height: 100)
     }
 }
