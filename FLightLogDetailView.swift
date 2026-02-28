@@ -49,14 +49,12 @@ struct FlightLogDetailView: View {
                             }
 
                             Spacer(minLength: 8)
-                            Spacer()
 
                             HStack {
                                 Button("← Back") {
                                     dismiss()
                                 }
                                 .font(.system(size: 36, design: .rounded))
-                                .font(.system(size: 38, design: .rounded))
                                 .foregroundColor(.black.opacity(0.8))
 
                                 Spacer()
@@ -92,17 +90,5 @@ struct FlightLogDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-            }
-            .padding(24)
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private func header(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 38, weight: .medium, design: .rounded))
-            .foregroundColor(.red.opacity(0.75))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
     }
 }
