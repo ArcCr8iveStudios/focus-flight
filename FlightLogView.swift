@@ -37,6 +37,8 @@ struct FlightLogView: View {
                                         HStack(spacing: 0) {
                                             tableCell(mission.name, color: .blue)
                                             tableCell("\(mission.duration)m", color: .black.opacity(0.8))
+                                            tableCell(mission.name)
+                                            tableCell("\(mission.duration)m")
                                         }
                                         Divider().background(Color.blue.opacity(0.2))
                                     }
@@ -70,6 +72,7 @@ struct FlightLogView: View {
         Text(title)
             .font(.system(size: 38, weight: .medium, design: .rounded))
             .foregroundColor(.orange)
+            .foregroundColor(.red.opacity(0.75))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
     }
@@ -78,6 +81,9 @@ struct FlightLogView: View {
         Text(text)
             .font(.system(size: 30, design: .rounded))
             .foregroundColor(color)
+    private func tableCell(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 30, design: .rounded))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)

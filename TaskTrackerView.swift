@@ -7,6 +7,10 @@ struct TaskTrackerView: View {
     @State private var showSheet = false
 
     @Environment(\.dismiss) private var dismiss
+    @State private var tasks: [TaskItem] = [
+        TaskItem(title: ".....", dueDate: .now),
+        TaskItem(title: ".....", dueDate: .now)
+    ]
 
     var body: some View {
         ZStack {
@@ -32,6 +36,7 @@ struct TaskTrackerView: View {
                             HStack(spacing: 0) {
                                 header("Task Name")
                                 header("☑")
+                                header("Start")
                                 header("Due")
                             }
                             Divider().background(Color.white.opacity(0.7))
@@ -85,6 +90,16 @@ struct TaskTrackerView: View {
                             }
                             .foregroundColor(.white)
                             .padding(12)
+                            ForEach(tasks) { task in
+                                HStack(spacing: 0) {
+                                    cell(task.title)
+                                    cell(task.isCompleted ? "☑" : "☐")
+                                    cell(task.dueDate.formatted(.dateTime.day().month(.defaultDigits)))
+                                    cell(task.dueDate.addingTimeInterval(86_400).formatted(.dateTime.day().month(.defaultDigits)))
+                                }
+                            }
+
+                            Spacer()
                         }
                         .overlay {
                             HStack(spacing: 0) {
@@ -122,7 +137,16 @@ struct TaskTrackerView: View {
             }
             .padding()
             .presentationDetents([.fraction(0.45)])
+                                Spacer()
+                                Rectangle().fill(Color.white.opacity(0.75)).frame(width: 3)
+                            }
+                            .padding(.horizontal, 33)
+                        }
+                    }
+            }
+            .padding(24)
         }
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private func toggleCompletion(_ task: TaskItem) {

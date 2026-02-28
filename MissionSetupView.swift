@@ -160,6 +160,73 @@ struct MissionSetupView: View {
 
             Spacer()
 
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var missionSummaryView: some View {
+        VStack(spacing: 20) {
+            Text(missionName)
+                .font(.system(size: 56, weight: .medium, design: .rounded))
+
+            Text("Session Time")
+                .font(.system(size: 44, weight: .medium, design: .rounded))
+
+            Text("\(duration) min")
+                .font(.system(size: 30, weight: .medium, design: .rounded))
+                .padding(.horizontal, 24)
+                .padding(.vertical, 10)
+                .background(Color.blue.opacity(0.35))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            Text("Aircraft Upgrade")
+                .font(.system(size: 54, weight: .medium, design: .rounded))
+                .foregroundColor(.red.opacity(0.65))
+
+            HStack(spacing: 40) {
+                Image(systemName: "airplane")
+                Text("→")
+                Image(systemName: "airplane")
+            }
+            .font(.system(size: 62))
+
+            ProgressView(value: 0.55)
+                .tint(.blue)
+                .scaleEffect(x: 1, y: 2, anchor: .center)
+                .padding(.horizontal)
+
+            Spacer()
+
+            HStack(spacing: 16) {
+                Button("← Back") {
+                    showMissionBrief = false
+                }
+                .font(.system(size: 34, design: .rounded))
+
+                Spacer()
+
+                Button("Start Mission") {
+                    dismiss()
+                }
+                .font(.system(size: 44, weight: .medium, design: .rounded))
+                .padding(.vertical, 18)
+                .padding(.horizontal, 42)
+                .background(Color.red.opacity(0.72))
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            }
+            .foregroundColor(.black.opacity(0.85))
+        }
+    }
+
+    private func timeRow(label: String, date: Date) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 40, weight: .medium, design: .rounded))
+                .multilineTextAlignment(.leading)
+
+            Spacer()
+
             Text(date.formatted(date: .abbreviated, time: .omitted))
                 .font(.system(size: 30, design: .rounded))
                 .padding(.horizontal, 14)

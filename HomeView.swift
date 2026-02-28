@@ -64,6 +64,13 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
+                Image(systemName: "airplane")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 120)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    .frame(maxWidth: .infinity)
 
                 HStack(alignment: .bottom, spacing: 40) {
                     VStack(spacing: 10) {
