@@ -11,8 +11,12 @@ struct TaskTrackerView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color.orange.opacity(0.65), Color.orange.opacity(0.95), Color.orange.opacity(0.55)], startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
+            LinearGradient(
+                colors: [Color.orange.opacity(0.65), Color.orange.opacity(0.95), Color.orange.opacity(0.55)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
             VStack(spacing: 22) {
                 HStack {
@@ -44,14 +48,11 @@ struct TaskTrackerView: View {
                             .foregroundColor(.white)
                             .padding(12)
 
-                            Divider().background(Color.white.opacity(0.7))
-
                             HStack(spacing: 0) {
                                 header("Task Name")
                                 header("☑")
                                 header("Due")
                             }
-                            Divider().background(Color.white.opacity(0.7))
 
                             if tasks.isEmpty {
                                 Text("No tasks yet")
@@ -79,19 +80,10 @@ struct TaskTrackerView: View {
                                                 cell(task.dueDate.formatted(.dateTime.day().month(.defaultDigits)))
                                             }
                                             .background(task.isCompleted ? Color.green.opacity(0.2) : .clear)
-                                            Divider().background(Color.white.opacity(0.45))
                                         }
                                     }
                                 }
                             }
-                        }
-                        .overlay {
-                            HStack(spacing: 0) {
-                                Rectangle().fill(Color.white.opacity(0.75)).frame(width: 3)
-                                Spacer()
-                                Rectangle().fill(Color.white.opacity(0.75)).frame(width: 3)
-                            }
-                            .padding(.horizontal, 55)
                         }
                     }
             }

@@ -36,8 +36,8 @@ struct FlightLogView: View {
                                 VStack(spacing: 0) {
                                     ForEach(missions) { mission in
                                         HStack(spacing: 0) {
-                                            tableCell(mission.name, color: .blue)
-                                            tableCell("\(mission.duration)m", color: .black.opacity(0.8))
+                                            tableCell(mission.name, color: .black)
+                                            tableCell("\(mission.duration)m", color: .black)
                                         }
                                         Divider().background(Color.blue.opacity(0.2))
                                     }

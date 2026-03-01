@@ -45,8 +45,8 @@ struct FlightLogDetailView: View {
                                     VStack(spacing: 0) {
                                         ForEach(completedTasks) { task in
                                             HStack(spacing: 0) {
-                                                cell(task.title, color: .green)
-                                                cell(task.dueDate.formatted(.dateTime.day().month(.defaultDigits)), color: .blue)
+                                                cell(task.title, color: .black)
+                                                cell(task.dueDate.formatted(.dateTime.day().month(.defaultDigits)), color: .black)
                                             }
                                             Divider().background(Color.blue.opacity(0.2))
                                         }

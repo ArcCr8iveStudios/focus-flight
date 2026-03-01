@@ -63,17 +63,11 @@ struct HomeView: View {
 
     private var mainContent: some View {
         VStack(alignment: .leading, spacing: 20) {
-            HStack(spacing: 14) {
-                Image(systemName: "line.3.horizontal")
-                    .font(.title3)
-                    .foregroundColor(.black.opacity(0.75))
-
-                Text("Focus Flight")
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .minimumScaleFactor(0.6)
-                    .foregroundColor(.white)
-            }
-            .padding(.top, 8)
+            Text("Focus Flight")
+                .font(.system(size: 52, weight: .bold, design: .rounded))
+                .minimumScaleFactor(0.6)
+                .foregroundColor(.white)
+                .padding(.top, 8)
 
             cloud
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -244,13 +238,9 @@ struct HomeView: View {
             levelProgressMinutes = 0
             turbulencePoints = 0
         } else {
-            levelProgressMinutes += missions[index].duration
-            let needed = PlaneCatalog.minutesNeededToReachNextLevel(from: currentPlaneIndex)
-            if levelProgressMinutes >= needed, currentPlaneIndex < PlaneCatalog.tiers.count - 1 {
-                currentPlaneIndex += 1
-                levelProgressMinutes = 0
-                turbulencePoints = 0
-            }
+            let elapsedSeconds = max(0, Date().timeIntervalSince(active.date))
+            let elapsedMinutes = min(active.duration, Int(elapsedSeconds / 60.0))
+            applyMinutesProgress(elapsedMinutes)
         }
 
         missions[index].isActive = false
@@ -258,6 +248,26 @@ struct HomeView: View {
         activeMission = nil
 
         stopMissionDueTimer()
+    }
+
+
+    private func applyMinutesProgress(_ earnedMinutes: Int) {
+        var carry = max(0, earnedMinutes)
+
+        while carry > 0 {
+            let needed = PlaneCatalog.minutesNeededToReachNextLevel(from: currentPlaneIndex)
+            let remainingToLevel = max(needed - levelProgressMinutes, 0)
+
+            if carry >= remainingToLevel, currentPlaneIndex < PlaneCatalog.tiers.count - 1 {
+                carry -= remainingToLevel
+                currentPlaneIndex += 1
+                levelProgressMinutes = 0
+                turbulencePoints = 0
+            } else {
+                levelProgressMinutes += carry
+                carry = 0
+            }
+        }
     }
 
     private func refreshMissionDueTimer() {
@@ -268,7 +278,7 @@ struct HomeView: View {
             let endDate = activeMission.date.addingTimeInterval(TimeInterval(activeMission.duration * 60))
             if Date() >= endDate, alarmedMissionID != activeMission.id {
                 alarmedMissionID = activeMission.id
-                startAlarm(duration: 3)
+                startAlarm(duration: 10)
             }
         }
     }
