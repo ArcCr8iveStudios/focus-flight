@@ -164,6 +164,13 @@ struct HomeView: View {
             if showAlarmPopup {
                 alarmOverlay
             }
+            .padding(24)
+        }
+        .overlay(alignment: .center) {
+            if showAlarmPopup {
+                alarmOverlay
+            }
+            .padding(24)
         }
         .navigationBarBackButtonHidden(true)
         .onAppear { refreshMissionDueTimer() }
