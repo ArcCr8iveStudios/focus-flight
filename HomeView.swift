@@ -8,13 +8,26 @@ struct HomeView: View {
     @State private var showAlarmPopup = false
     @State private var alarmTimer: Timer?
     @State private var alarmEndDate: Date?
+    @State private var missionDueTimer: Timer?
+    @State private var alarmedMissionID: Mission.ID?
 
     var completedMissions: Int {
         missions.filter { $0.isCompleted }.count
     }
 
+    var completedMinutes: Int {
+        missions.filter { $0.isCompleted }.reduce(0) { $0 + $1.duration }
+    }
+
+    var currentLevel: Int {
+        PlaneCatalog.level(forTotalMinutes: completedMinutes)
+    }
+
     var turbulenceLevel: Double {
-        activeMission == nil ? 75 : 35
+        let baseline: Double = activeMission == nil ? 50 : 35
+        let sum = missions.filter(\.isCompleted).reduce(0) { $0 + $1.turbulenceDelta }
+        let scaled = baseline + Double(sum)
+        return min(max(scaled, 0), 100)
     }
 
     var altitudeLevel: Double {
@@ -22,7 +35,7 @@ struct HomeView: View {
     }
 
     var currentPlane: PlaneTier {
-        PlaneCatalog.currentPlane(completedMissions: completedMissions)
+        PlaneCatalog.currentPlane(totalMinutes: completedMinutes)
     }
 
     var body: some View {
@@ -65,11 +78,19 @@ struct HomeView: View {
                     PlaneOverviewView(missions: missions)
                 } label: {
                     VStack(spacing: 8) {
-                        Image(systemName: currentPlane.symbol)
+                        Image(currentPlane.assetName)
                             .resizable()
                             .scaledToFit()
                             .frame(height: 105)
-                            .foregroundColor(.white)
+                            .overlay {
+                                if currentPlane.assetName.isEmpty {
+                                    Image(systemName: currentPlane.symbol)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.white)
+                                        .padding(18)
+                                }
+                            }
 
                         Text(currentPlane.name)
                             .font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -95,8 +116,10 @@ struct HomeView: View {
                                 .frame(width: 138, height: 138)
 
                             Circle()
-                                .trim(from: 0.65, to: 0.78)
-                                .stroke(Color.red.opacity(0.8), style: .init(lineWidth: 14, lineCap: .round))
+                                .trim(from: 0, to: turbulenceLevel / 100)
+                                .stroke(turbulenceLevel >= 50 ? Color.green : Color.red,
+                                        style: .init(lineWidth: 14, lineCap: .round))
+                                .rotationEffect(.degrees(-90))
                                 .frame(width: 138, height: 138)
                         }
                     }
@@ -143,9 +166,23 @@ struct HomeView: View {
             }
             .padding(24)
         }
+        .overlay(alignment: .center) {
+            if showAlarmPopup {
+                alarmOverlay
+            }
+            .padding(24)
+        }
         .navigationBarBackButtonHidden(true)
+        .onAppear { refreshMissionDueTimer() }
         .onDisappear {
             stopAlarm()
+            stopMissionDueTimer()
+        }
+        .onChange(of: activeMission?.id) { _ in
+            if activeMission == nil {
+                alarmedMissionID = nil
+            }
+            refreshMissionDueTimer()
         }
     }
 
@@ -202,11 +239,34 @@ struct HomeView: View {
         guard let active = activeMission,
               let index = missions.firstIndex(where: { $0.id == active.id }) else { return }
 
+        let magnitude = max(1, 1 + (currentLevel / 2))
+        let delta = Int.random(in: -magnitude...magnitude)
+
         missions[index].isActive = false
         missions[index].isCompleted = true
+        missions[index].turbulenceDelta = delta
         activeMission = nil
 
-        startAlarm(duration: 3)
+        stopMissionDueTimer()
+    }
+
+    private func refreshMissionDueTimer() {
+        stopMissionDueTimer()
+
+        guard let activeMission else { return }
+
+        missionDueTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            let endDate = activeMission.date.addingTimeInterval(TimeInterval(activeMission.duration * 60))
+            if Date() >= endDate, alarmedMissionID != activeMission.id {
+                alarmedMissionID = activeMission.id
+                startAlarm(duration: 3)
+            }
+        }
+    }
+
+    private func stopMissionDueTimer() {
+        missionDueTimer?.invalidate()
+        missionDueTimer = nil
     }
 
     private func startAlarm(duration: TimeInterval) {

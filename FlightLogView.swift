@@ -46,7 +46,7 @@ struct FlightLogView: View {
                             HStack {
                                 Spacer()
                                 NavigationLink("Next  →") {
-                                    FlightLogDetailView()
+                                    FlightLogDetailView(missions: missions)
                                 }
                                 .font(.system(size: 38, design: .rounded))
                                 .foregroundColor(.black.opacity(0.8))

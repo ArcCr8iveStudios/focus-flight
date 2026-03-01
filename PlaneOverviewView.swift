@@ -5,20 +5,20 @@ struct PlaneOverviewView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    private var completedMissions: Int {
-        missions.filter { $0.isCompleted }.count
-    }
-
-    private var currentPlane: PlaneTier {
-        PlaneCatalog.currentPlane(completedMissions: completedMissions)
-    }
-
-    private var progress: Double {
-        PlaneCatalog.progress(completedMissions: completedMissions)
+    private var completedMinutes: Int {
+        missions.filter { $0.isCompleted }.reduce(0) { $0 + $1.duration }
     }
 
     private var currentIndex: Int {
-        min(completedMissions, PlaneCatalog.tiers.count - 1)
+        PlaneCatalog.level(forTotalMinutes: completedMinutes)
+    }
+
+    private var currentPlane: PlaneTier {
+        PlaneCatalog.tiers[currentIndex]
+    }
+
+    private var progress: Double {
+        PlaneCatalog.progress(totalMinutes: completedMinutes)
     }
 
     var body: some View {
@@ -46,10 +46,18 @@ struct PlaneOverviewView: View {
                     .fill(Color.blue.opacity(0.45))
                     .overlay {
                         VStack(spacing: 14) {
-                            Image(systemName: currentPlane.symbol)
+                            Image(currentPlane.assetName)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 230)
+                                .overlay {
+                                    if currentPlane.assetName.isEmpty {
+                                        Image(systemName: currentPlane.symbol)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .padding(20)
+                                    }
+                                }
 
                             Text("Specs")
                                 .font(.system(size: 48, weight: .bold, design: .rounded))

@@ -109,9 +109,7 @@ struct MissionSetupView: View {
                     return
                 }
 
-                let newMission = Mission(name: trimmed, duration: totalDurationMinutes, date: Date())
-                missions.append(newMission)
-                activeMission = newMission
+                missionName = trimmed
                 showMissionBrief = true
             }
             .font(.system(size: 44, weight: .medium, design: .rounded))
@@ -165,6 +163,9 @@ struct MissionSetupView: View {
                 Spacer()
 
                 Button("Start Mission") {
+                    let newMission = Mission(name: missionName, duration: totalDurationMinutes, date: Date())
+                    missions.append(newMission)
+                    activeMission = newMission
                     dismiss()
                 }
                 .font(.system(size: 44, weight: .medium, design: .rounded))

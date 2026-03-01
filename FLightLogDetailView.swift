@@ -1,21 +1,30 @@
 import SwiftUI
 
 struct FlightLogDetailView: View {
+    let missions: [Mission]
+
     @Environment(\.dismiss) private var dismiss
 
-    private let turbulenceHistory = [
-        "Session 1   +3",
-        "Session 2   -1",
-        "Session 3   +2",
-        "Session 4   -2"
-    ]
+    private var completedMissions: [Mission] {
+        missions.filter { $0.isCompleted }
+    }
 
-    private let altitudeHistory = [
-        "Session 1   +5",
-        "Session 2   +2",
-        "Session 3   -1",
-        "Session 4   +4"
-    ]
+    private var turbulenceEntries: [TurbulenceEntry] {
+        completedMissions.map { mission in
+            TurbulenceEntry(
+                label: mission.name,
+                delta: mission.turbulenceDelta
+            )
+        }
+    }
+
+    private var altitudeHistory: [String] {
+        completedMissions.map { mission in
+            let sign = mission.duration >= 60 ? "+" : "-"
+            let value = max(1, mission.duration / 20)
+            return "\(mission.name)  \(sign)\(value)"
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -44,8 +53,8 @@ struct FlightLogDetailView: View {
                             Divider().background(Color.blue.opacity(0.4))
 
                             HStack(alignment: .top, spacing: 0) {
-                                historyColumn(entries: turbulenceHistory)
-                                historyColumn(entries: altitudeHistory)
+                                turbulenceColumn(entries: turbulenceEntries)
+                                altitudeColumn(entries: altitudeHistory)
                             }
 
                             Spacer(minLength: 8)
@@ -79,16 +88,54 @@ struct FlightLogDetailView: View {
             .padding(.vertical, 14)
     }
 
-    private func historyColumn(entries: [String]) -> some View {
+    private func turbulenceColumn(entries: [TurbulenceEntry]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(entries, id: \.self) { entry in
-                Text(entry)
-                    .font(.system(size: 28, design: .rounded))
-                    .foregroundColor(.blue)
+            if entries.isEmpty {
+                Text("No mission history")
+                    .font(.system(size: 24, design: .rounded))
+                    .foregroundColor(.gray)
+            } else {
+                ForEach(entries) { entry in
+                    Text(entry.display)
+                        .font(.system(size: 24, design: .rounded))
+                        .foregroundColor(entry.delta >= 0 ? .green : .red)
+                }
             }
+
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
+    }
+
+    private func altitudeColumn(entries: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if entries.isEmpty {
+                Text("No mission history")
+                    .font(.system(size: 24, design: .rounded))
+                    .foregroundColor(.gray)
+            } else {
+                ForEach(entries, id: \.self) { entry in
+                    Text(entry)
+                        .font(.system(size: 24, design: .rounded))
+                        .foregroundColor(.blue)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+    }
+}
+
+private struct TurbulenceEntry: Identifiable {
+    let id = UUID()
+    let label: String
+    let delta: Int
+
+    var display: String {
+        let sign = delta >= 0 ? "+" : ""
+        return "\(label)  \(sign)\(delta)"
     }
 }
