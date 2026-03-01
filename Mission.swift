@@ -7,4 +7,5 @@ struct Mission: Identifiable {
     var date: Date
     var isActive: Bool = true
     var isCompleted: Bool = false
+    var turbulenceDelta: Int = 0
 }
