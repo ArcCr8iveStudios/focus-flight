@@ -38,7 +38,7 @@ struct FlightLogDetailView: View {
                             if completedTasks.isEmpty {
                                 Text("No completed tasks yet")
                                     .font(.system(size: 26, design: .rounded))
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.black)
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                             } else {
                                 ScrollView {
@@ -75,7 +75,7 @@ struct FlightLogDetailView: View {
     private func header(_ title: String) -> some View {
         Text(title)
             .font(.system(size: 38, weight: .medium, design: .rounded))
-            .foregroundColor(.orange)
+            .foregroundColor(.black)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
     }

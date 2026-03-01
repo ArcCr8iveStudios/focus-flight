@@ -70,7 +70,7 @@ struct FlightLogView: View {
     private func tableHeader(title: String) -> some View {
         Text(title)
             .font(.system(size: 38, weight: .medium, design: .rounded))
-            .foregroundColor(.orange)
+            .foregroundColor(.black)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
     }

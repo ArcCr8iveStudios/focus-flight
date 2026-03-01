@@ -69,8 +69,11 @@ struct HomeView: View {
                 .foregroundColor(.white)
                 .padding(.top, 8)
 
-            cloud
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            HStack {
+                cloud
+                Spacer()
+                cloud
+            }
 
             HStack(spacing: 18) {
                 navButton("Start Mission", color: .red.opacity(0.75)) {
@@ -123,15 +126,16 @@ struct HomeView: View {
 
                     ZStack {
                         Circle()
-                            .trim(from: 0.15, to: 0.95)
+                            .trim(from: 0.05, to: 0.95)
                             .stroke(Color.white, lineWidth: 14)
+                            .rotationEffect(.degrees(90))
                             .frame(width: 138, height: 138)
 
                         Circle()
-                            .trim(from: 0, to: min(max(turbulenceLevel / 100, 0), 1))
+                            .trim(from: 0, to: min(max(turbulenceLevel / 100, 0), 1) * 0.9)
                             .stroke(Color.red,
                                     style: .init(lineWidth: 14, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
+                            .rotationEffect(.degrees(180))
                             .frame(width: 138, height: 138)
                     }
                 }
@@ -230,16 +234,18 @@ struct HomeView: View {
         let distractions = Int.random(in: 0...missionImpact)
         let turbulenceIncrease = distractions * 10
 
+        let elapsedSeconds = max(0, Date().timeIntervalSince(active.date))
+        let elapsedMinutes = min(active.duration, Int(elapsedSeconds / 60.0))
+
         turbulencePoints = min(100, turbulencePoints + turbulenceIncrease)
         missions[index].turbulenceDelta = -turbulenceIncrease
+        missions[index].duration = elapsedMinutes
 
         if turbulencePoints >= 100 {
             currentPlaneIndex = max(0, currentPlaneIndex - 1)
             levelProgressMinutes = 0
             turbulencePoints = 0
         } else {
-            let elapsedSeconds = max(0, Date().timeIntervalSince(active.date))
-            let elapsedMinutes = min(active.duration, Int(elapsedSeconds / 60.0))
             applyMinutesProgress(elapsedMinutes)
         }
 
