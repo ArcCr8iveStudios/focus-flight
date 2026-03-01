@@ -15,6 +15,9 @@ struct HomeView: View {
     @State private var alarmEndDate: Date?
     @State private var missionDueTimer: Timer?
     @State private var alarmedMissionID: Mission.ID?
+    @AppStorage("hasSeenHomeTutorial") private var hasSeenHomeTutorial = false
+    @State private var showTutorial = false
+    @State private var tutorialStep = 0
 
     var completedMissions: Int {
         missions.filter { $0.isCompleted }.count
@@ -50,7 +53,13 @@ struct HomeView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .onAppear { refreshMissionDueTimer() }
+        .onAppear {
+            refreshMissionDueTimer()
+            if !hasSeenHomeTutorial {
+                tutorialStep = 0
+                showTutorial = true
+            }
+        }
         .onDisappear {
             stopAlarm()
             stopMissionDueTimer()
@@ -58,6 +67,9 @@ struct HomeView: View {
         .onChange(of: activeMission?.id) { _ in
             if activeMission == nil { alarmedMissionID = nil }
             refreshMissionDueTimer()
+        }
+        .sheet(isPresented: $showTutorial, onDismiss: { hasSeenHomeTutorial = true }) {
+            tutorialSheet
         }
     }
 
@@ -90,10 +102,16 @@ struct HomeView: View {
                 }
             }
 
-            navButton("Flight Log", color: .green.opacity(0.75)) {
-                FlightLogView(missions: missions, tasks: tasks)
+            HStack {
+                Spacer()
+
+                navButton("Flight Log", color: .green.opacity(0.75)) {
+                    FlightLogView(missions: missions, tasks: tasks)
+                }
+                .frame(maxWidth: 260)
+
+                Spacer()
             }
-            .frame(maxWidth: 230)
 
             NavigationLink {
                 PlaneOverviewView(
@@ -200,6 +218,84 @@ struct HomeView: View {
             .background(Color.white.opacity(0.92))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
+    }
+
+    private var tutorialSteps: [(title: String, message: String)] {
+        [
+            ("Welcome to Focus Flight", "This quick tutorial shows where to start your focus sessions and track progress."),
+            ("Start Mission", "Tap Start Mission to create a Mission Brief, set your timer, and launch your focus session."),
+            ("Task Tracker", "Use Task Tracker to add and complete tasks. Completed tasks appear in your Flight Log."),
+            ("Flight Log", "Tap the centered Flight Log button to review mission history and completed tasks anytime.")
+        ]
+    }
+
+    private var tutorialSheet: some View {
+        let step = tutorialSteps[tutorialStep]
+
+        return ZStack {
+            Color(red: 0.58, green: 0.73, blue: 0.94)
+                .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                Text("Tutorial")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                Text("Step \(tutorialStep + 1) of \(tutorialSteps.count)")
+                    .font(.system(size: 22, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.9))
+
+                VStack(spacing: 16) {
+                    Text(step.title)
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.black.opacity(0.85))
+
+                    Text(step.message)
+                        .font(.system(size: 24, weight: .regular, design: .rounded))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.black.opacity(0.8))
+                }
+                .padding(24)
+                .frame(maxWidth: .infinity)
+                .background(Color.white.opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+                HStack(spacing: 14) {
+                    if tutorialStep > 0 {
+                        Button("Back") {
+                            tutorialStep -= 1
+                        }
+                        .font(.system(size: 26, weight: .medium, design: .rounded))
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 20)
+                        .background(Color.white.opacity(0.8))
+                        .foregroundColor(.black.opacity(0.85))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+
+                    Spacer()
+
+                    Button(tutorialStep == tutorialSteps.count - 1 ? "Done" : "Next") {
+                        if tutorialStep == tutorialSteps.count - 1 {
+                            hasSeenHomeTutorial = true
+                            showTutorial = false
+                        } else {
+                            tutorialStep += 1
+                        }
+                    }
+                    .font(.system(size: 26, weight: .medium, design: .rounded))
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(Color.green.opacity(0.8))
+                    .foregroundColor(.black.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+            }
+            .padding(24)
+        }
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled()
     }
 
     private func navButton<Destination: View>(_ title: String, color: Color, destination: @escaping () -> Destination) -> some View {

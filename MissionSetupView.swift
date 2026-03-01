@@ -42,10 +42,10 @@ struct MissionSetupView: View {
                     Spacer()
                 }
 
-                Text("Mission Breif")
+                Text("Mission Brief")
                     .font(.system(size: 52, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
 
                 if showMissionBrief {
                     missionSummaryView
