@@ -35,6 +35,12 @@ enum PlaneCatalog {
         PlaneTier(name: "Airbus A380", power: "280,000 lb thrust", wingspan: "261 ft 8 in", weight: "1,268,000 lbs", symbol: "airplane", assetName: "Plane21")
     ]
 
+
+    static func tier(at index: Int) -> PlaneTier {
+        let clamped = min(max(index, 0), tiers.count - 1)
+        return tiers[clamped]
+    }
+
     static func level(forTotalMinutes totalMinutes: Int) -> Int {
         var level = 0
         var remaining = max(totalMinutes, 0)

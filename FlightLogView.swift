@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FlightLogView: View {
     var missions: [Mission]
+    var tasks: [TaskItem]
 
     @Environment(\.dismiss) private var dismiss
 
@@ -45,10 +46,10 @@ struct FlightLogView: View {
 
                             HStack {
                                 Spacer()
-                                NavigationLink("Next  →") {
-                                    FlightLogDetailView(missions: missions)
+                                NavigationLink("Tasks Done  →") {
+                                    FlightLogDetailView(tasks: tasks)
                                 }
-                                .font(.system(size: 38, design: .rounded))
+                                .font(.system(size: 34, design: .rounded))
                                 .foregroundColor(.black.opacity(0.8))
                             }
                             .padding()

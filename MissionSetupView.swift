@@ -3,6 +3,7 @@ import SwiftUI
 struct MissionSetupView: View {
     @Binding var missions: [Mission]
     @Binding var activeMission: Mission?
+    @Binding var currentPlaneIndex: Int
 
     @State private var missionName: String = ""
     @State private var hours: Int = 0
@@ -20,6 +21,14 @@ struct MissionSetupView: View {
         "\(hours)h \(minutes)m"
     }
 
+    private var currentPlane: PlaneTier {
+        PlaneCatalog.tier(at: currentPlaneIndex)
+    }
+
+    private var nextPlane: PlaneTier {
+        PlaneCatalog.tier(at: min(currentPlaneIndex + 1, PlaneCatalog.tiers.count - 1))
+    }
+
     var body: some View {
         ZStack {
             Color.gray.opacity(0.65)
@@ -27,12 +36,9 @@ struct MissionSetupView: View {
 
             VStack(spacing: 24) {
                 HStack {
-                    Button("←") {
-                        dismiss()
-                    }
-                    .font(.system(size: 44, weight: .medium, design: .rounded))
-                    .foregroundColor(.black.opacity(0.8))
-
+                    Button("←") { dismiss() }
+                        .font(.system(size: 44, weight: .medium, design: .rounded))
+                        .foregroundColor(.black.opacity(0.8))
                     Spacer()
                 }
 
@@ -52,9 +58,7 @@ struct MissionSetupView: View {
             .padding(24)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            isMissionNameFocused = true
-        }
+        .onAppear { isMissionNameFocused = true }
     }
 
     private var missionInputView: some View {
@@ -83,16 +87,12 @@ struct MissionSetupView: View {
 
                 HStack(spacing: 0) {
                     Picker("Hours", selection: $hours) {
-                        ForEach(0...12, id: \.self) { hour in
-                            Text("\(hour) h").tag(hour)
-                        }
+                        ForEach(0...12, id: \.self) { hour in Text("\(hour) h").tag(hour) }
                     }
                     .pickerStyle(.wheel)
 
                     Picker("Minutes", selection: $minutes) {
-                        ForEach(0...59, id: \.self) { minute in
-                            Text("\(minute) m").tag(minute)
-                        }
+                        ForEach(0...59, id: \.self) { minute in Text("\(minute) m").tag(minute) }
                     }
                     .pickerStyle(.wheel)
                 }
@@ -140,25 +140,36 @@ struct MissionSetupView: View {
                 .font(.system(size: 54, weight: .medium, design: .rounded))
                 .foregroundColor(.red.opacity(0.65))
 
-            HStack(spacing: 40) {
-                Image(systemName: "airplane")
-                Text("→")
-                Image(systemName: "airplane")
-            }
-            .font(.system(size: 62))
+            HStack(alignment: .center, spacing: 12) {
+                VStack(spacing: 4) {
+                    Image(currentPlane.assetName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 90, height: 50)
+                    Text(currentPlane.name)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
 
-            ProgressView(value: 0.55)
-                .tint(.blue)
-                .scaleEffect(x: 1, y: 2, anchor: .center)
-                .padding(.horizontal)
+                Text("→")
+                    .font(.system(size: 48))
+
+                VStack(spacing: 4) {
+                    Image(nextPlane.assetName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 90, height: 50)
+                    Text(nextPlane.name)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+            }
 
             Spacer()
 
             HStack(spacing: 16) {
-                Button("← Back") {
-                    showMissionBrief = false
-                }
-                .font(.system(size: 34, design: .rounded))
+                Button("← Back") { showMissionBrief = false }
+                    .font(.system(size: 34, design: .rounded))
 
                 Spacer()
 

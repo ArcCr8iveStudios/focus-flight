@@ -4,6 +4,11 @@ import AudioToolbox
 struct HomeView: View {
     @Binding var missions: [Mission]
     @Binding var activeMission: Mission?
+    @Binding var tasks: [TaskItem]
+
+    @Binding var currentPlaneIndex: Int
+    @Binding var levelProgressMinutes: Int
+    @Binding var turbulencePoints: Int
 
     @State private var showAlarmPopup = false
     @State private var alarmTimer: Timer?
@@ -15,27 +20,22 @@ struct HomeView: View {
         missions.filter { $0.isCompleted }.count
     }
 
-    var completedMinutes: Int {
-        missions.filter { $0.isCompleted }.reduce(0) { $0 + $1.duration }
+    var currentPlane: PlaneTier {
+        PlaneCatalog.tier(at: currentPlaneIndex)
     }
 
-    var currentLevel: Int {
-        PlaneCatalog.level(forTotalMinutes: completedMinutes)
+    var nextPlane: PlaneTier? {
+        PlaneCatalog.tier(at: currentPlaneIndex + 1)
     }
 
     var turbulenceLevel: Double {
-        let baseline: Double = activeMission == nil ? 50 : 35
-        let sum = missions.filter(\.isCompleted).reduce(0) { $0 + $1.turbulenceDelta }
-        let scaled = baseline + Double(sum)
-        return min(max(scaled, 0), 100)
+        Double(turbulencePoints)
     }
 
     var altitudeLevel: Double {
-        min(Double(completedMissions) * 14, 100)
-    }
-
-    var currentPlane: PlaneTier {
-        PlaneCatalog.currentPlane(totalMinutes: completedMinutes)
+        let needed = PlaneCatalog.minutesNeededToReachNextLevel(from: currentPlaneIndex)
+        guard needed > 0 else { return 100 }
+        return min(Double(levelProgressMinutes) / Double(needed) * 100, 100)
     }
 
     var body: some View {
@@ -50,17 +50,13 @@ struct HomeView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .onAppear {
-            refreshMissionDueTimer()
-        }
+        .onAppear { refreshMissionDueTimer() }
         .onDisappear {
             stopAlarm()
             stopMissionDueTimer()
         }
         .onChange(of: activeMission?.id) { _ in
-            if activeMission == nil {
-                alarmedMissionID = nil
-            }
+            if activeMission == nil { alarmedMissionID = nil }
             refreshMissionDueTimer()
         }
     }
@@ -84,21 +80,29 @@ struct HomeView: View {
 
             HStack(spacing: 18) {
                 navButton("Start Mission", color: .red.opacity(0.75)) {
-                    MissionSetupView(missions: $missions, activeMission: $activeMission)
+                    MissionSetupView(
+                        missions: $missions,
+                        activeMission: $activeMission,
+                        currentPlaneIndex: $currentPlaneIndex
+                    )
                 }
 
                 navButton("Task Tracker", color: .orange.opacity(0.8)) {
-                    TaskTrackerView()
+                    TaskTrackerView(tasks: $tasks)
                 }
             }
 
             navButton("Flight Log", color: .green.opacity(0.75)) {
-                FlightLogView(missions: missions)
+                FlightLogView(missions: missions, tasks: tasks)
             }
             .frame(maxWidth: 230)
 
             NavigationLink {
-                PlaneOverviewView(missions: missions)
+                PlaneOverviewView(
+                    missions: missions,
+                    currentPlaneIndex: currentPlaneIndex,
+                    levelProgressMinutes: levelProgressMinutes
+                )
             } label: {
                 VStack(spacing: 8) {
                     Image(currentPlane.assetName)
@@ -130,8 +134,8 @@ struct HomeView: View {
                             .frame(width: 138, height: 138)
 
                         Circle()
-                            .trim(from: 0, to: turbulenceLevel / 100)
-                            .stroke(turbulenceLevel >= 50 ? Color.green : Color.red,
+                            .trim(from: 0, to: min(max(turbulenceLevel / 100, 0), 1))
+                            .stroke(Color.red,
                                     style: .init(lineWidth: 14, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                             .frame(width: 138, height: 138)
@@ -228,12 +232,29 @@ struct HomeView: View {
         guard let active = activeMission,
               let index = missions.firstIndex(where: { $0.id == active.id }) else { return }
 
-        let magnitude = max(1, 1 + (currentLevel / 2))
-        let delta = Int.random(in: -magnitude...magnitude)
+        let missionImpact = max(1, currentPlaneIndex + 1)
+        let distractions = Int.random(in: 0...missionImpact)
+        let turbulenceIncrease = distractions * 10
+
+        turbulencePoints = min(100, turbulencePoints + turbulenceIncrease)
+        missions[index].turbulenceDelta = -turbulenceIncrease
+
+        if turbulencePoints >= 100 {
+            currentPlaneIndex = max(0, currentPlaneIndex - 1)
+            levelProgressMinutes = 0
+            turbulencePoints = 0
+        } else {
+            levelProgressMinutes += missions[index].duration
+            let needed = PlaneCatalog.minutesNeededToReachNextLevel(from: currentPlaneIndex)
+            if levelProgressMinutes >= needed, currentPlaneIndex < PlaneCatalog.tiers.count - 1 {
+                currentPlaneIndex += 1
+                levelProgressMinutes = 0
+                turbulencePoints = 0
+            }
+        }
 
         missions[index].isActive = false
         missions[index].isCompleted = true
-        missions[index].turbulenceDelta = delta
         activeMission = nil
 
         stopMissionDueTimer()
@@ -241,7 +262,6 @@ struct HomeView: View {
 
     private func refreshMissionDueTimer() {
         stopMissionDueTimer()
-
         guard let activeMission else { return }
 
         missionDueTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in

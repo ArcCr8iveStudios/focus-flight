@@ -2,23 +2,21 @@ import SwiftUI
 
 struct PlaneOverviewView: View {
     let missions: [Mission]
+    let currentPlaneIndex: Int
+    let levelProgressMinutes: Int
 
     @Environment(\.dismiss) private var dismiss
 
-    private var completedMinutes: Int {
-        missions.filter { $0.isCompleted }.reduce(0) { $0 + $1.duration }
-    }
-
-    private var currentIndex: Int {
-        PlaneCatalog.level(forTotalMinutes: completedMinutes)
-    }
-
     private var currentPlane: PlaneTier {
-        PlaneCatalog.tiers[currentIndex]
+        PlaneCatalog.tier(at: currentPlaneIndex)
+    }
+
+    private var neededMinutes: Int {
+        PlaneCatalog.minutesNeededToReachNextLevel(from: currentPlaneIndex)
     }
 
     private var progress: Double {
-        PlaneCatalog.progress(totalMinutes: completedMinutes)
+        min(Double(levelProgressMinutes) / Double(max(neededMinutes, 1)), 1)
     }
 
     var body: some View {
@@ -50,14 +48,6 @@ struct PlaneOverviewView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 230)
-                                .overlay {
-                                    if currentPlane.assetName.isEmpty {
-                                        Image(systemName: currentPlane.symbol)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .padding(20)
-                                    }
-                                }
 
                             Text("Specs")
                                 .font(.system(size: 48, weight: .bold, design: .rounded))
@@ -71,8 +61,11 @@ struct PlaneOverviewView: View {
                     }
                     .frame(height: 420)
 
-                Text("Plane \(currentIndex + 1) of \(PlaneCatalog.tiers.count)")
+                Text("Plane \(currentPlaneIndex + 1) of \(PlaneCatalog.tiers.count)")
                     .font(.headline)
+
+                Text("Altitude Progress: \(levelProgressMinutes)/\(neededMinutes) min")
+                    .font(.subheadline)
 
                 ProgressView(value: progress)
                     .tint(.blue)
@@ -83,11 +76,11 @@ struct PlaneOverviewView: View {
                     HStack(spacing: 10) {
                         ForEach(Array(PlaneCatalog.tiers.enumerated()), id: \.offset) { index, plane in
                             Text(plane.name)
-                                .font(.system(size: 15, weight: index == currentIndex ? .bold : .regular, design: .rounded))
-                                .foregroundColor(index == currentIndex ? .white : .black.opacity(0.75))
+                                .font(.system(size: 15, weight: index == currentPlaneIndex ? .bold : .regular, design: .rounded))
+                                .foregroundColor(index == currentPlaneIndex ? .white : .black.opacity(0.75))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(index == currentIndex ? Color.blue.opacity(0.8) : Color.white.opacity(0.45))
+                                .background(index == currentPlaneIndex ? Color.blue.opacity(0.8) : Color.white.opacity(0.45))
                                 .clipShape(Capsule())
                         }
                     }

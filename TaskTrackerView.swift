@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct TaskTrackerView: View {
-    @State private var tasks: [TaskItem] = []
+    @Binding var tasks: [TaskItem]
+
     @State private var newTitle = ""
     @State private var newDueDate = Date()
     @State private var showSheet = false
@@ -29,6 +30,22 @@ struct TaskTrackerView: View {
                     .fill(Color.red.opacity(0.45))
                     .overlay {
                         VStack(spacing: 0) {
+                            HStack {
+                                Button("+ Add Task") { showSheet = true }
+                                    .font(.system(size: 24, weight: .medium, design: .rounded))
+
+                                Spacer()
+
+                                Button("Clear") { tasks.removeAll() }
+                                    .font(.system(size: 24, weight: .medium, design: .rounded))
+                                    .opacity(tasks.isEmpty ? 0.5 : 1)
+                                    .disabled(tasks.isEmpty)
+                            }
+                            .foregroundColor(.white)
+                            .padding(12)
+
+                            Divider().background(Color.white.opacity(0.7))
+
                             HStack(spacing: 0) {
                                 header("Task Name")
                                 header("☑")
@@ -67,24 +84,6 @@ struct TaskTrackerView: View {
                                     }
                                 }
                             }
-
-                            HStack(spacing: 12) {
-                                Button("+ Add Task") {
-                                    showSheet = true
-                                }
-                                .font(.system(size: 28, weight: .medium, design: .rounded))
-
-                                Spacer()
-
-                                if !tasks.isEmpty {
-                                    Button("Clear") {
-                                        tasks.removeAll()
-                                    }
-                                    .font(.system(size: 28, weight: .medium, design: .rounded))
-                                }
-                            }
-                            .foregroundColor(.white)
-                            .padding(12)
                         }
                         .overlay {
                             HStack(spacing: 0) {
