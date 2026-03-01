@@ -16,26 +16,31 @@ struct HomeView: View {
     @State private var missionDueTimer: Timer?
     @State private var alarmedMissionID: Mission.ID?
 
-    var completedMissions: Int {
-        missions.filter { $0.isCompleted }.count
-    }
+    @AppStorage("hasSeenHomeTutorial") private var hasSeenHomeTutorial = false
+    @State private var showTutorial = false
+    @State private var tutorialStep = 0
 
-    var currentPlane: PlaneTier {
+    private var currentPlane: PlaneTier {
         PlaneCatalog.tier(at: currentPlaneIndex)
     }
 
-    var nextPlane: PlaneTier? {
-        PlaneCatalog.tier(at: currentPlaneIndex + 1)
+    private var turbulenceProgress: Double {
+        min(max(Double(turbulencePoints) / 100.0, 0), 1)
     }
 
-    var turbulenceLevel: Double {
-        Double(turbulencePoints)
-    }
-
-    var altitudeLevel: Double {
+    private var altitudeProgress: Double {
         let needed = PlaneCatalog.minutesNeededToReachNextLevel(from: currentPlaneIndex)
-        guard needed > 0 else { return 100 }
-        return min(Double(levelProgressMinutes) / Double(needed) * 100, 100)
+        guard needed > 0 else { return 1 }
+        return min(max(Double(levelProgressMinutes) / Double(needed), 0), 1)
+    }
+
+    private var tutorialSteps: [(title: String, message: String)] {
+        [
+            ("Welcome to Focus Flight", "This quick tutorial shows where to begin and how your sessions connect."),
+            ("Start a Mission", "Tap Start Mission, fill in the Mission Brief, then begin your focus session."),
+            ("Track Tasks", "Open Task Tracker to add tasks and mark them complete as you work."),
+            ("Review Progress", "Use Flight Log to check completed missions and finished tasks anytime.")
+        ]
     }
 
     var body: some View {
@@ -43,139 +48,171 @@ struct HomeView: View {
             Color(red: 0.58, green: 0.73, blue: 0.94)
                 .ignoresSafeArea()
 
-            mainContent
+            content
 
             if showAlarmPopup {
                 alarmOverlay
             }
         }
         .navigationBarBackButtonHidden(true)
-        .onAppear { refreshMissionDueTimer() }
+        .onAppear(perform: onAppear)
         .onDisappear {
             stopAlarm()
             stopMissionDueTimer()
         }
         .onChange(of: activeMission?.id) { _ in
-            if activeMission == nil { alarmedMissionID = nil }
+            if activeMission == nil {
+                alarmedMissionID = nil
+            }
             refreshMissionDueTimer()
+        }
+        .sheet(isPresented: $showTutorial, onDismiss: { hasSeenHomeTutorial = true }) {
+            tutorialSheet
         }
     }
 
-    private var mainContent: some View {
+    private var content: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Focus Flight")
-                .font(.system(size: 52, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.6)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 8)
+            titleSection
+            cloudSection
+            primaryActions
+            centeredFlightLog
+            planeShortcut
+            progressSection
+            endMissionButton
+            Spacer(minLength: 0)
+        }
+        .padding(24)
+    }
 
-            HStack(alignment: .top) {
-                cloud(scale: 0.8)
-                Spacer()
-                cloud(scale: 1.2)
+    private var titleSection: some View {
+        Text("Focus Flight")
+            .font(.system(size: 52, weight: .bold, design: .rounded))
+            .minimumScaleFactor(0.6)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 8)
+    }
+
+    private var cloudSection: some View {
+        HStack(alignment: .top) {
+            cloud(scale: 0.8)
+            Spacer()
+            cloud(scale: 1.2)
+        }
+    }
+
+    private var primaryActions: some View {
+        HStack(spacing: 18) {
+            navButton("Start Mission", color: .red.opacity(0.75)) {
+                MissionSetupView(
+                    missions: $missions,
+                    activeMission: $activeMission,
+                    currentPlaneIndex: $currentPlaneIndex
+                )
             }
 
-            HStack(spacing: 18) {
-                navButton("Start Mission", color: .red.opacity(0.75)) {
-                    MissionSetupView(
-                        missions: $missions,
-                        activeMission: $activeMission,
-                        currentPlaneIndex: $currentPlaneIndex
-                    )
-                }
-
-                navButton("Task Tracker", color: .orange.opacity(0.8)) {
-                    TaskTrackerView(tasks: $tasks)
-                }
+            navButton("Task Tracker", color: .orange.opacity(0.8)) {
+                TaskTrackerView(tasks: $tasks)
             }
+        }
+    }
+
+    private var centeredFlightLog: some View {
+        HStack {
+            Spacer()
 
             navButton("Flight Log", color: .green.opacity(0.75)) {
                 FlightLogView(missions: missions, tasks: tasks)
             }
-            .frame(maxWidth: 230)
+            .frame(maxWidth: 260)
 
-            NavigationLink {
-                PlaneOverviewView(
-                    missions: missions,
-                    currentPlaneIndex: currentPlaneIndex,
-                    levelProgressMinutes: levelProgressMinutes
-                )
-            } label: {
-                VStack(spacing: 8) {
-                    Image(currentPlane.assetName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 105)
+            Spacer()
+        }
+    }
 
-                    Text(currentPlane.name)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
+    private var planeShortcut: some View {
+        NavigationLink {
+            PlaneOverviewView(
+                missions: missions,
+                currentPlaneIndex: currentPlaneIndex,
+                levelProgressMinutes: levelProgressMinutes
+            )
+        } label: {
+            VStack(spacing: 8) {
+                Image(currentPlane.assetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 105)
+
+                Text(currentPlane.name)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+
+    private var progressSection: some View {
+        HStack(alignment: .bottom, spacing: 40) {
+            VStack(spacing: 10) {
+                Text("Turbulence")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                ZStack {
+                    Circle()
+                        .trim(from: 0.05, to: 0.95)
+                        .stroke(Color.white, lineWidth: 14)
+                        .rotationEffect(.degrees(90))
+                        .frame(width: 138, height: 138)
+
+                    Circle()
+                        .trim(from: 0, to: turbulenceProgress * 0.9)
+                        .stroke(Color.red, style: .init(lineWidth: 14, lineCap: .round))
+                        .rotationEffect(.degrees(180))
+                        .frame(width: 138, height: 138)
                 }
-                .padding(.horizontal, 20)
-                .frame(maxWidth: .infinity)
+            }
+
+            VStack(spacing: 10) {
+                Text("Altitude")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                ZStack(alignment: .bottom) {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.green.opacity(0.7), lineWidth: 4)
+                        .frame(width: 38, height: 190)
+
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.green)
+                        .frame(width: 30, height: CGFloat(altitudeProgress) * 186)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var endMissionButton: some View {
+        if activeMission != nil {
+            Button {
+                endMission()
+            } label: {
+                Text("End Mission")
+                    .font(.system(size: 36, weight: .medium, design: .rounded))
+                    .padding(.vertical, 14)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.black.opacity(0.75))
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(PlainButtonStyle())
-
-            HStack(alignment: .bottom, spacing: 40) {
-                VStack(spacing: 10) {
-                    Text("Turbulence")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-
-                    ZStack {
-                        Circle()
-                            .trim(from: 0.05, to: 0.95)
-                            .stroke(Color.white, lineWidth: 14)
-                            .rotationEffect(.degrees(90))
-                            .frame(width: 138, height: 138)
-
-                        Circle()
-                            .trim(from: 0, to: min(max(turbulenceLevel / 100, 0), 1) * 0.9)
-                            .stroke(Color.red,
-                                    style: .init(lineWidth: 14, lineCap: .round))
-                            .rotationEffect(.degrees(180))
-                            .frame(width: 138, height: 138)
-                    }
-                }
-
-                VStack(spacing: 10) {
-                    Text("Altitude")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-
-                    ZStack(alignment: .bottom) {
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.green.opacity(0.7), lineWidth: 4)
-                            .frame(width: 38, height: 190)
-
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.green)
-                            .frame(width: 30, height: CGFloat(altitudeLevel / 100) * 186)
-                    }
-                }
-            }
-
-            if activeMission != nil {
-                Button {
-                    endMission()
-                } label: {
-                    Text("End Mission")
-                        .font(.system(size: 36, weight: .medium, design: .rounded))
-                        .padding(.vertical, 14)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black.opacity(0.75))
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-
-            Spacer(minLength: 0)
         }
-        .padding(24)
     }
 
     private var alarmOverlay: some View {
@@ -201,14 +238,6 @@ struct HomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
- private var tutorialSteps: [(title: String, message: String)] {
-        [
-            ("Welcome to Focus Flight", "This quick tutorial shows where to start your focus sessions and track progress."),
-            ("Start Mission", "Tap Start Mission to create a Mission Brief, set your timer, and launch your focus session."),
-            ("Task Tracker", "Use Task Tracker to add and complete tasks. Completed tasks appear in your Flight Log."),
-            ("Flight Log", "Tap the centered Flight Log button to review mission history and completed tasks anytime.")
-        ]
-    }
 
     private var tutorialSheet: some View {
         let step = tutorialSteps[tutorialStep]
@@ -233,7 +262,7 @@ struct HomeView: View {
                         .foregroundColor(.black.opacity(0.85))
 
                     Text(step.message)
-                        .font(.system(size: 24, weight: .regular, design: .rounded))
+                        .font(.system(size: 24, design: .rounded))
                         .multilineTextAlignment(.center)
                         .foregroundColor(.black.opacity(0.8))
                 }
@@ -259,18 +288,7 @@ struct HomeView: View {
 
                     Button(tutorialStep == tutorialSteps.count - 1 ? "Done" : "Next") {
                         if tutorialStep == tutorialSteps.count - 1 {
-                            hasSeenHomeTutorial = true
-                            showTutorial = false
-                        } else {
-                            tutorialStep += 1
-                        }
-                    }
-                    .font(.system(size: 26, weight: .medium, design: .rounded))
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 24)
-                    .background(Color.green.opacity(0.8))
-                    .foregroundColor(.black.opacity(0.85))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+@@ -293,127 +303,147 @@ struct HomeView: View {
                 }
             }
             .padding(24)
@@ -296,17 +314,39 @@ struct HomeView: View {
 
     private func cloud(scale: CGFloat) -> some View {
         ZStack {
-            Circle().fill(Color.white.opacity(0.92)).frame(width: 78 * scale)
-            Circle().fill(Color.white.opacity(0.92)).frame(width: 88 * scale).offset(x: 42 * scale, y: 5 * scale)
-            Circle().fill(Color.white.opacity(0.92)).frame(width: 70 * scale).offset(x: -40 * scale, y: 10 * scale)
-            RoundedRectangle(cornerRadius: 30 * scale).fill(Color.white.opacity(0.92)).frame(width: 185 * scale, height: 66 * scale).offset(y: 20 * scale)
+            Circle()
+                .fill(Color.white.opacity(0.92))
+                .frame(width: 78 * scale)
+            Circle()
+                .fill(Color.white.opacity(0.92))
+                .frame(width: 88 * scale)
+                .offset(x: 42 * scale, y: 5 * scale)
+            Circle()
+                .fill(Color.white.opacity(0.92))
+                .frame(width: 70 * scale)
+                .offset(x: -40 * scale, y: 10 * scale)
+            RoundedRectangle(cornerRadius: 30 * scale)
+                .fill(Color.white.opacity(0.92))
+                .frame(width: 185 * scale, height: 66 * scale)
+                .offset(y: 20 * scale)
         }
         .frame(width: 210 * scale, height: 100 * scale)
     }
 
+    private func onAppear() {
+        refreshMissionDueTimer()
+
+        if !hasSeenHomeTutorial {
+            tutorialStep = 0
+            showTutorial = true
+        }
+    }
+
     private func endMission() {
         guard let active = activeMission,
-              let index = missions.firstIndex(where: { $0.id == active.id }) else { return }
+              let index = missions.firstIndex(where: { $0.id == active.id }) else {
+            return
+        }
 
         let missionImpact = max(1, currentPlaneIndex + 1)
         let distractions = Int.random(in: 1...missionImpact)
@@ -333,7 +373,6 @@ struct HomeView: View {
 
         stopMissionDueTimer()
     }
-
 
     private func applyMinutesProgress(_ earnedMinutes: Int) {
         var carry = max(0, earnedMinutes)
@@ -380,8 +419,7 @@ struct HomeView: View {
         AudioServicesPlaySystemSound(1005)
 
         alarmTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { timer in
-            guard let alarmEndDate,
-                  Date() < alarmEndDate else {
+            guard let alarmEndDate, Date() < alarmEndDate else {
                 timer.invalidate()
                 stopAlarm()
                 return
