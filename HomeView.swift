@@ -80,7 +80,7 @@ struct HomeView: View {
                     .padding(.horizontal, 20)
                     .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PlainButtonStyle())
 
                 HStack(alignment: .bottom, spacing: 40) {
                     VStack(spacing: 10) {
@@ -130,39 +130,46 @@ struct HomeView: View {
                             .foregroundColor(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PlainButtonStyle())
                 }
 
                 Spacer(minLength: 0)
             }
             .padding(24)
-
+        }
+        .overlay(alignment: .center) {
             if showAlarmPopup {
-                Color.black.opacity(0.35)
-                    .ignoresSafeArea()
-
-                VStack(spacing: 14) {
-                    Text("Mission Complete")
-                        .font(.title2.bold())
-
-                    Text("Alarm is ringing")
-                        .font(.body)
-
-                    Button("Turn Off") {
-                        stopAlarm()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding(20)
-                .frame(maxWidth: 280)
-                .background(Color.white.opacity(0.92))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                alarmOverlay
             }
             .padding(24)
         }
         .navigationBarBackButtonHidden(true)
         .onDisappear {
             stopAlarm()
+        }
+    }
+
+    private var alarmOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+
+            VStack(spacing: 14) {
+                Text("Mission Complete")
+                    .font(.title2.bold())
+
+                Text("Alarm is ringing")
+                    .font(.body)
+
+                Button("Turn Off") {
+                    stopAlarm()
+                }
+                .buttonStyle(BorderedProminentButtonStyle())
+            }
+            .padding(20)
+            .frame(maxWidth: 280)
+            .background(Color.white.opacity(0.92))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
@@ -178,7 +185,7 @@ struct HomeView: View {
                 .foregroundColor(.black.opacity(0.85))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PlainButtonStyle())
     }
 
     private var cloud: some View {
