@@ -67,12 +67,13 @@ struct HomeView: View {
                 .font(.system(size: 52, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.6)
                 .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 8)
 
-            HStack {
-                cloud
+            HStack(alignment: .top) {
+                cloud(scale: 0.8)
                 Spacer()
-                cloud
+                cloud(scale: 1.2)
             }
 
             HStack(spacing: 18) {
@@ -216,14 +217,14 @@ struct HomeView: View {
         .buttonStyle(PlainButtonStyle())
     }
 
-    private var cloud: some View {
+    private func cloud(scale: CGFloat) -> some View {
         ZStack {
-            Circle().fill(Color.white.opacity(0.92)).frame(width: 78)
-            Circle().fill(Color.white.opacity(0.92)).frame(width: 88).offset(x: 42, y: 5)
-            Circle().fill(Color.white.opacity(0.92)).frame(width: 70).offset(x: -40, y: 10)
-            RoundedRectangle(cornerRadius: 30).fill(Color.white.opacity(0.92)).frame(width: 185, height: 66).offset(y: 20)
+            Circle().fill(Color.white.opacity(0.92)).frame(width: 78 * scale)
+            Circle().fill(Color.white.opacity(0.92)).frame(width: 88 * scale).offset(x: 42 * scale, y: 5 * scale)
+            Circle().fill(Color.white.opacity(0.92)).frame(width: 70 * scale).offset(x: -40 * scale, y: 10 * scale)
+            RoundedRectangle(cornerRadius: 30 * scale).fill(Color.white.opacity(0.92)).frame(width: 185 * scale, height: 66 * scale).offset(y: 20 * scale)
         }
-        .frame(width: 210, height: 100)
+        .frame(width: 210 * scale, height: 100 * scale)
     }
 
     private func endMission() {
@@ -231,7 +232,7 @@ struct HomeView: View {
               let index = missions.firstIndex(where: { $0.id == active.id }) else { return }
 
         let missionImpact = max(1, currentPlaneIndex + 1)
-        let distractions = Int.random(in: 0...missionImpact)
+        let distractions = Int.random(in: 1...missionImpact)
         let turbulenceIncrease = distractions * 10
 
         let elapsedSeconds = max(0, Date().timeIntervalSince(active.date))

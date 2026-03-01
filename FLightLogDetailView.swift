@@ -45,7 +45,7 @@ struct FlightLogDetailView: View {
                                     VStack(spacing: 0) {
                                         ForEach(completedTasks) { task in
                                             HStack(spacing: 0) {
-                                                cell(task.title, color: .black)
+                                                cell(task.title, color: .black, strikethrough: task.isCompleted)
                                                 cell(task.dueDate.formatted(.dateTime.day().month(.defaultDigits)), color: .black)
                                             }
                                             Divider().background(Color.blue.opacity(0.2))
@@ -80,10 +80,11 @@ struct FlightLogDetailView: View {
             .padding(.vertical, 14)
     }
 
-    private func cell(_ text: String, color: Color) -> some View {
+    private func cell(_ text: String, color: Color, strikethrough: Bool = false) -> some View {
         Text(text)
             .font(.system(size: 24, design: .rounded))
             .foregroundColor(color)
+            .strikethrough(strikethrough, color: color)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
