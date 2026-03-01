@@ -141,6 +141,7 @@ struct HomeView: View {
             if showAlarmPopup {
                 alarmOverlay
             }
+            .padding(24)
         }
         .navigationBarBackButtonHidden(true)
         .onDisappear {
