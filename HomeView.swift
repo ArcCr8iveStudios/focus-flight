@@ -43,137 +43,16 @@ struct HomeView: View {
             Color(red: 0.58, green: 0.73, blue: 0.94)
                 .ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 14) {
-                    Image(systemName: "line.3.horizontal")
-                        .font(.title3)
-                        .foregroundColor(.black.opacity(0.75))
+            mainContent
 
-                    Text("Focus Flight")
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
-                        .minimumScaleFactor(0.6)
-                        .foregroundColor(.white)
-                }
-                .padding(.top, 8)
-
-                cloud
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-
-                HStack(spacing: 18) {
-                    navButton("Start Mission", color: .red.opacity(0.75)) {
-                        MissionSetupView(missions: $missions, activeMission: $activeMission)
-                    }
-
-                    navButton("Task Tracker", color: .orange.opacity(0.8)) {
-                        TaskTrackerView()
-                    }
-                }
-
-                navButton("Flight Log", color: .green.opacity(0.75)) {
-                    FlightLogView(missions: missions)
-                }
-                .frame(maxWidth: 230)
-
-                NavigationLink {
-                    PlaneOverviewView(missions: missions)
-                } label: {
-                    VStack(spacing: 8) {
-                        Image(currentPlane.assetName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 105)
-                            .overlay {
-                                if currentPlane.assetName.isEmpty {
-                                    Image(systemName: currentPlane.symbol)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .foregroundColor(.white)
-                                        .padding(18)
-                                }
-                            }
-
-                        Text(currentPlane.name)
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                    }
-                    .padding(.horizontal, 20)
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(PlainButtonStyle())
-
-                HStack(alignment: .bottom, spacing: 40) {
-                    VStack(spacing: 10) {
-                        Text("Turbulence")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-
-                        ZStack {
-                            Circle()
-                                .trim(from: 0.15, to: 0.95)
-                                .stroke(Color.white, lineWidth: 14)
-                                .frame(width: 138, height: 138)
-
-                            Circle()
-                                .trim(from: 0, to: turbulenceLevel / 100)
-                                .stroke(turbulenceLevel >= 50 ? Color.green : Color.red,
-                                        style: .init(lineWidth: 14, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                                .frame(width: 138, height: 138)
-                        }
-                    }
-
-                    VStack(spacing: 10) {
-                        Text("Altitude")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-
-                        ZStack(alignment: .bottom) {
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.green.opacity(0.7), lineWidth: 4)
-                                .frame(width: 38, height: 190)
-
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.green)
-                                .frame(width: 30, height: CGFloat(altitudeLevel / 100) * 186)
-                        }
-                    }
-                }
-
-                if activeMission != nil {
-                    Button {
-                        endMission()
-                    } label: {
-                        Text("End Mission")
-                            .font(.system(size: 36, weight: .medium, design: .rounded))
-                            .padding(.vertical, 14)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.black.opacity(0.75))
-                            .foregroundColor(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(24)
-        }
-        .overlay(alignment: .center) {
             if showAlarmPopup {
                 alarmOverlay
             }
-            .padding(24)
-        }
-        .overlay(alignment: .center) {
-            if showAlarmPopup {
-                alarmOverlay
-            }
-            .padding(24)
         }
         .navigationBarBackButtonHidden(true)
-        .onAppear { refreshMissionDueTimer() }
+        .onAppear {
+            refreshMissionDueTimer()
+        }
         .onDisappear {
             stopAlarm()
             stopMissionDueTimer()
@@ -184,6 +63,116 @@ struct HomeView: View {
             }
             refreshMissionDueTimer()
         }
+    }
+
+    private var mainContent: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(spacing: 14) {
+                Image(systemName: "line.3.horizontal")
+                    .font(.title3)
+                    .foregroundColor(.black.opacity(0.75))
+
+                Text("Focus Flight")
+                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.6)
+                    .foregroundColor(.white)
+            }
+            .padding(.top, 8)
+
+            cloud
+                .frame(maxWidth: .infinity, alignment: .trailing)
+
+            HStack(spacing: 18) {
+                navButton("Start Mission", color: .red.opacity(0.75)) {
+                    MissionSetupView(missions: $missions, activeMission: $activeMission)
+                }
+
+                navButton("Task Tracker", color: .orange.opacity(0.8)) {
+                    TaskTrackerView()
+                }
+            }
+
+            navButton("Flight Log", color: .green.opacity(0.75)) {
+                FlightLogView(missions: missions)
+            }
+            .frame(maxWidth: 230)
+
+            NavigationLink {
+                PlaneOverviewView(missions: missions)
+            } label: {
+                VStack(spacing: 8) {
+                    Image(currentPlane.assetName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 105)
+
+                    Text(currentPlane.name)
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                }
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PlainButtonStyle())
+
+            HStack(alignment: .bottom, spacing: 40) {
+                VStack(spacing: 10) {
+                    Text("Turbulence")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+
+                    ZStack {
+                        Circle()
+                            .trim(from: 0.15, to: 0.95)
+                            .stroke(Color.white, lineWidth: 14)
+                            .frame(width: 138, height: 138)
+
+                        Circle()
+                            .trim(from: 0, to: turbulenceLevel / 100)
+                            .stroke(turbulenceLevel >= 50 ? Color.green : Color.red,
+                                    style: .init(lineWidth: 14, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .frame(width: 138, height: 138)
+                    }
+                }
+
+                VStack(spacing: 10) {
+                    Text("Altitude")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+
+                    ZStack(alignment: .bottom) {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.green.opacity(0.7), lineWidth: 4)
+                            .frame(width: 38, height: 190)
+
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.green)
+                            .frame(width: 30, height: CGFloat(altitudeLevel / 100) * 186)
+                    }
+                }
+            }
+
+            if activeMission != nil {
+                Button {
+                    endMission()
+                } label: {
+                    Text("End Mission")
+                        .font(.system(size: 36, weight: .medium, design: .rounded))
+                        .padding(.vertical, 14)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.75))
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(24)
     }
 
     private var alarmOverlay: some View {
