@@ -69,6 +69,7 @@ struct MissionSetupView: View {
 
                 TextField("Type mission name", text: $missionName)
                     .font(.system(size: 30, weight: .regular, design: .rounded))
+                    .foregroundColor(.black)
                     .textFieldStyle(.plain)
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled(true)
