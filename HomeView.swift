@@ -5,6 +5,10 @@ struct HomeView: View {
     @Binding var missions: [Mission]
     @Binding var activeMission: Mission?
 
+    @State private var showAlarmPopup = false
+    @State private var alarmTimer: Timer?
+    @State private var alarmEndDate: Date?
+
     var completedMissions: Int {
         missions.filter { $0.isCompleted }.count
     }
@@ -15,6 +19,10 @@ struct HomeView: View {
 
     var altitudeLevel: Double {
         min(Double(completedMissions) * 14, 100)
+    }
+
+    var currentPlane: PlaneTier {
+        PlaneCatalog.currentPlane(completedMissions: completedMissions)
     }
 
     var body: some View {
@@ -54,15 +62,23 @@ struct HomeView: View {
                 .frame(maxWidth: 230)
 
                 NavigationLink {
-                    PlaneOverviewView()
+                    PlaneOverviewView(missions: missions)
                 } label: {
-                    Image(systemName: "airplane")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 120)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 8) {
+                        Image(systemName: currentPlane.symbol)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 105)
+                            .foregroundColor(.white)
+
+                        Text(currentPlane.name)
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .padding(.horizontal, 20)
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
 
@@ -120,8 +136,34 @@ struct HomeView: View {
                 Spacer(minLength: 0)
             }
             .padding(24)
+
+            if showAlarmPopup {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 14) {
+                    Text("Mission Complete")
+                        .font(.title2.bold())
+
+                    Text("Alarm is ringing")
+                        .font(.body)
+
+                    Button("Turn Off") {
+                        stopAlarm()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(20)
+                .frame(maxWidth: 280)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .padding(24)
         }
         .navigationBarBackButtonHidden(true)
+        .onDisappear {
+            stopAlarm()
+        }
     }
 
     private func navButton<Destination: View>(_ title: String, color: Color, destination: @escaping () -> Destination) -> some View {
@@ -157,35 +199,32 @@ struct HomeView: View {
         missions[index].isCompleted = true
         activeMission = nil
 
-        MissionAlarmPlayer.shared.playCompletionAlarm(duration: 3)
+        startAlarm(duration: 3)
     }
-}
 
-private final class MissionAlarmPlayer {
-    static let shared = MissionAlarmPlayer()
+    private func startAlarm(duration: TimeInterval) {
+        stopAlarm()
+        showAlarmPopup = true
 
-    private var timer: Timer?
-    private var endDate: Date?
-
-    private init() {}
-
-    func playCompletionAlarm(duration: TimeInterval) {
-        timer?.invalidate()
-
-        endDate = Date().addingTimeInterval(duration)
+        alarmEndDate = Date().addingTimeInterval(duration)
         AudioServicesPlaySystemSound(1005)
 
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] timer in
-            guard let self,
-                  let endDate = self.endDate,
-                  Date() < endDate else {
+        alarmTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { timer in
+            guard let alarmEndDate,
+                  Date() < alarmEndDate else {
                 timer.invalidate()
-                self?.timer = nil
-                self?.endDate = nil
+                stopAlarm()
                 return
             }
 
             AudioServicesPlaySystemSound(1005)
         }
+    }
+
+    private func stopAlarm() {
+        alarmTimer?.invalidate()
+        alarmTimer = nil
+        alarmEndDate = nil
+        showAlarmPopup = false
     }
 }
