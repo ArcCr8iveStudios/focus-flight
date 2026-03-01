@@ -16,7 +16,7 @@ struct HomeView: View {
     @State private var missionDueTimer: Timer?
     @State private var alarmedMissionID: Mission.ID?
 
-    @AppStorage("hasSeenHomeTutorial") private var hasSeenHomeTutorial = false
+    @State private var hasSeenHomeTutorial = false
     @State private var showTutorial = false
     @State private var tutorialStep = 0
 
@@ -66,7 +66,10 @@ struct HomeView: View {
             }
             refreshMissionDueTimer()
         }
-        .sheet(isPresented: $showTutorial, onDismiss: { hasSeenHomeTutorial = true }) {
+        .sheet(isPresented: $showTutorial, onDismiss: {
+            hasSeenHomeTutorial = true
+            UserDefaults.standard.set(true, forKey: "hasSeenHomeTutorial")
+        }) {
             tutorialSheet
         }
     }
@@ -288,7 +291,19 @@ struct HomeView: View {
 
                     Button(tutorialStep == tutorialSteps.count - 1 ? "Done" : "Next") {
                         if tutorialStep == tutorialSteps.count - 1 {
-@@ -293,127 +303,147 @@ struct HomeView: View {
+                            hasSeenHomeTutorial = true
+                            UserDefaults.standard.set(true, forKey: "hasSeenHomeTutorial")
+                            showTutorial = false
+                        } else {
+                            tutorialStep += 1
+                        }
+                    }
+                    .font(.system(size: 26, weight: .medium, design: .rounded))
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(Color.green.opacity(0.8))
+                    .foregroundColor(.black.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
             .padding(24)
