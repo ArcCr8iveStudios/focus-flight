@@ -155,7 +155,7 @@ struct HomeView: View {
                 }
                 .padding(20)
                 .frame(maxWidth: 280)
-                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.92))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .padding(24)
